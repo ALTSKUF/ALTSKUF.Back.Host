@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <Sdk Name="Aspire.AppHost.Sdk" Version="9.0.0" />
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsAspireHost>true</IsAspireHost>
+    <UserSecretsId>c287a1a4-9805-4f8d-98d5-6b5e14c16c15</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.AppHost" Version="9.1.0" />
+    <PackageReference Include="Aspire.Hosting.Kafka" Version="9.1.0" />
+    <PackageReference Include="Dutchskull.Aspire.PolyRepo" Version="0.3.3-alpha.127" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\AltSKUF.WebApi\AltSKUF.WebApi.csproj" />
+  </ItemGroup>
+
+</Project>
