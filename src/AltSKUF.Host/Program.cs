@@ -7,19 +7,19 @@ var repository = builder.AddRepository(
     c => c.WithDefaultBranch("master")
         .WithTargetPath("../../repos"));
 
-var kafka = builder.AddKafka("Kafka");
+var rmq = builder.AddRabbitMQ("rmq");
 var redis = builder.AddRedis("Redis");
 
 
 #region Services
 var webApi = builder
     .AddProject<Projects.AltSKUF_WebApi>("Api")
-    .WithReference(kafka)
+    .WithReference(rmq)
     .WithReference(redis);
 
 var testService = builder
     .AddProjectFromRepository("healthcheck", repository,
-        "../../repos/ALTSKUF.BACK.HealthCheck/HealthCheck.csproj");
+        "../../repos/ALTSKUF.BACK.HealthCheck/HealthCheck.csproj").WithReference(rmq);
    
 #endregion
 
