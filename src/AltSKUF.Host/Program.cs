@@ -2,7 +2,7 @@ using Dutchskull.Aspire.PolyRepo;
 var builder = DistributedApplication.CreateBuilder(args);
 
 var repository = builder.AddRepository(
-    "repository",
+    "TestService",
     "https://github.com/ALTSKUF/ALTSKUF.BACK.HealthCheck.git",
     c => c.WithDefaultBranch("master")
         .WithTargetPath("../../repos"));
@@ -25,7 +25,7 @@ var webApi = builder
     .WithReference(redis);
 
 var testService = builder
-    .AddProjectFromRepository("healthCheck", repository,
+    .AddProjectFromRepository("TestService", repository,
         "../../repos/ALTSKUF.BACK.HealthCheck/HealthCheck.csproj")
     .WithReference(msgBroker)
     .WaitFor(msgBroker);
