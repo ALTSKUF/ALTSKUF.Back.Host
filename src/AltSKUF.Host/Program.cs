@@ -7,19 +7,28 @@ var repository = builder.AddRepository(
     c => c.WithDefaultBranch("master")
         .WithTargetPath("../../repos"));
 
-var rmq = builder.AddRabbitMQ("rmq");
+
+
+
+var msgBroker = builder.AddRabbitMQ("Messaging", port: 5672)
+.WithManagementPlugin();
+
+
 var redis = builder.AddRedis("Redis");
 
 
 #region Services
 var webApi = builder
     .AddProject<Projects.AltSKUF_WebApi>("Api")
-    .WithReference(rmq)
+    .WithReference(msgBroker)
+    .WaitFor(msgBroker)
     .WithReference(redis);
 
 var testService = builder
-    .AddProjectFromRepository("healthcheck", repository,
-        "../../repos/ALTSKUF.BACK.HealthCheck/HealthCheck.csproj").WithReference(rmq);
+    .AddProjectFromRepository("healthCheck", repository,
+        "../../repos/ALTSKUF.BACK.HealthCheck/HealthCheck.csproj")
+    .WithReference(msgBroker)
+    .WaitFor(msgBroker);
    
 #endregion
 
