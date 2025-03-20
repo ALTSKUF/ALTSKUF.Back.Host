@@ -4,10 +4,14 @@ services:
   aspire-dashboard:
     container_name: "aspire-dashboard"
     image: "mcr.microsoft.com/dotnet/aspire-dashboard:9.0"
+    expose:
+      - "18888"
+      - "18889"
     environment:
       DOTNET_DASHBOARD_UNSECURED_ALLOW_ANONYMOUS: "true"
     ports:
-      - "18888:18888"
+      - 18889:18889
+      - 18888:18888
     restart: unless-stopped
 
   Messaging:

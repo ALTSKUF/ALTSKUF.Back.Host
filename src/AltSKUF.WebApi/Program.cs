@@ -7,6 +7,9 @@ builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddApiVersioning();
+builder.Services.AddHttpClient();
+builder.Services.AddLogging(c=>c.AddConsole());
 
 var messagingConnectionString = builder.Configuration["ConnectionStrings:Messaging"];
 builder.Services.AddSingleton(_ => new RpcServer(messagingConnectionString));
@@ -36,7 +39,7 @@ app.MapPost("/api/rpc/send", async (string message, RpcServer rpcServer) =>
 
 app.UseSwagger();
 app.UseSwaggerUI();
-
+app.UseApiVersioning();
 app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
