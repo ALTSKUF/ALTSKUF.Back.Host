@@ -11,20 +11,20 @@ namespace AltSKUF.WebApi.Controllers
     {
         private readonly HttpClient _httpClient;
         private readonly IConfiguration _configuration;
-        private readonly string _userPort;
+        private readonly string _userUrl;
         private readonly ILogger _logger;
         public AuthorizationController(HttpClient httpClient, IConfiguration configuration, ILogger<AuthorizationController> logger)
         {
             _httpClient = httpClient;
             _configuration = configuration;
-            _userPort = _configuration["UserPort"]!;
+            _userUrl = _configuration["UserUrl"]!;
             _logger = logger;
         }
 
         [HttpPost("register")]
         public async Task<IActionResult> RegisterUser([FromBody] UserEmailRegistrationRequest registrationRequest)
         {
-            string registrationServiceUrl = $"https://localhost:{_userPort}/Auth/Email";
+            string registrationServiceUrl = $"{_userUrl}/Auth/Email"; 
 
             var response = await _httpClient.PostAsJsonAsync(registrationServiceUrl, registrationRequest);
 
@@ -42,7 +42,7 @@ namespace AltSKUF.WebApi.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> LoginUser([FromBody] UserEmailAuthRequest authRequest)
         {
-            string authServiceUrl = $"https://localhost:{_userPort}/Auth/Email";
+            string authServiceUrl = $"{_userUrl}/Auth/Email";
 
             var response = await _httpClient.PostAsJsonAsync(authServiceUrl, authRequest);
 

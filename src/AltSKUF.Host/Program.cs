@@ -64,7 +64,7 @@ var webApi = builder
     .WaitFor(msgBroker)
     .WithReference(redis)
     .WithHttpsEndpoint(port: 5010, name: "api")
-    .WithEnvironment("UserPort", "5020");
+    .WithEnvironment("UserUrl", "https://localhost:5020");
 #endregion
 
 builder.Build().Run();
