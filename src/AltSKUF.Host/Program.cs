@@ -1,6 +1,5 @@
-using Aspire.Hosting;
 using Dutchskull.Aspire.PolyRepo;
-using System.Diagnostics;
+
 var builder = DistributedApplication.CreateBuilder(args);
 
 var testRepo = builder.AddRepository(
@@ -21,14 +20,11 @@ var authRepo = builder.AddRepository(
     c => c.WithDefaultBranch("master")
         .WithTargetPath("../../repos"));
 
-
 var msgBroker = builder
     .AddRabbitMQ("Messaging", port: 5672)
     .WithManagementPlugin();
 
 var redis = builder.AddRedis("Redis");
-
-
 
 var npgsqlUser = builder
     .AddPostgres("PostgresDB")
@@ -37,17 +33,6 @@ var npgsqlUser = builder
 
 #region Services
 
-
-
-var authService = builder
-    .AddProjectFromRepository("AuthService", authRepo,
-        "../../repos/AltSKUF.Back.Authentication/src/AltSKUF.Back.Authentication/AltSKUF.Back.Authentication.csproj")
-    .WithReference(msgBroker)
-    .WaitFor(msgBroker)
-    .WaitFor(npgsqlUser)
-    .WithHttpsEndpoint(port: 5030, name: "auth");
-
-
 var userService = builder
     .AddProjectFromRepository("UserService", userRepo,
         "../../repos/AltSKUF.Back.Users/src/AltSKUF.Server.Users/AltSKUF.Back.Users.csproj")
@@ -55,10 +40,16 @@ var userService = builder
     .WithReference(npgsqlUser)
     .WaitFor(msgBroker)
     .WithHttpsEndpoint(port: 5020, name: "user")
-    .WithEnvironment("AuthenticationServiceAddress", "https://localhost:5030")
-    .WaitFor(authService);
+    .WithEnvironment("DefaultOptions__AuthenticationServiceAddress", "https://localhost:5030");
 
-
+var authService = builder
+    .AddProjectFromRepository("AuthService", authRepo,
+        "../../repos/AltSKUF.Back.Authentication/src/AltSKUF.Back.Authentication/AltSKUF.Back.Authentication.csproj")
+    .WithReference(msgBroker)
+    .WaitFor(msgBroker)
+    .WaitFor(npgsqlUser)
+    .WithHttpsEndpoint(port: 5030, name: "auth")
+    .WaitFor(userService);
 
 var testService = builder
     .AddProjectFromRepository("TestService", testRepo,
@@ -74,11 +65,6 @@ var webApi = builder
     .WithReference(redis)
     .WithHttpsEndpoint(port: 5010, name: "api")
     .WithEnvironment("UserPort", "5020");
-
-
-
-
-
 #endregion
 
 builder.Build().Run();

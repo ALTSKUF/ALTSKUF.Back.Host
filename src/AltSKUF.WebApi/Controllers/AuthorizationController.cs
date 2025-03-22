@@ -1,7 +1,6 @@
 ﻿
 using Microsoft.AspNetCore.Mvc;
 using AltSKUF.WebApi.Authorization;
-using Microsoft.Extensions.Configuration;
 
 namespace AltSKUF.WebApi.Controllers
 {
@@ -25,8 +24,7 @@ namespace AltSKUF.WebApi.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> RegisterUser([FromBody] UserEmailRegistrationRequest registrationRequest)
         {
-            string registrationServiceUrl = $"https://localhost:{_userPort}/Email";
-            _logger.LogDebug("123323");
+            string registrationServiceUrl = $"https://localhost:{_userPort}/Auth/Email";
 
             var response = await _httpClient.PostAsJsonAsync(registrationServiceUrl, registrationRequest);
 
@@ -44,8 +42,7 @@ namespace AltSKUF.WebApi.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> LoginUser([FromBody] UserEmailAuthRequest authRequest)
         {
-            
-            string authServiceUrl = $"https://localhost:{_userPort}/api/Auth/Email";
+            string authServiceUrl = $"https://localhost:{_userPort}/Auth/Email";
 
             var response = await _httpClient.PostAsJsonAsync(authServiceUrl, authRequest);
 
