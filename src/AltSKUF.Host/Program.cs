@@ -2,12 +2,6 @@ using Dutchskull.Aspire.PolyRepo;
 
 var builder = DistributedApplication.CreateBuilder(args);
 
-var testRepo = builder.AddRepository(
-    "TestService",
-    "https://github.com/ALTSKUF/ALTSKUF.BACK.HealthCheck.git",
-    c => c.WithDefaultBranch("master")
-        .WithTargetPath("../../repos"));
-
 var userRepo = builder.AddRepository(
     "UserService",
     "https://github.com/ALTSKUF/AltSKUF.Back.Users.git",
@@ -51,12 +45,6 @@ var authService = builder
     .WithHttpsEndpoint(port: 5030, name: "auth")
     .WaitFor(userService);
 
-var testService = builder
-    .AddProjectFromRepository("TestService", testRepo,
-        "../../repos/ALTSKUF.BACK.HealthCheck/HealthCheck.csproj")
-    .WithReference(msgBroker)
-    .WaitFor(msgBroker)
-    .WithHttpsEndpoint(port: 5110, name: "test");
 
 var webApi = builder
     .AddProject<Projects.AltSKUF_WebApi>("Api")
