@@ -1,0 +1,152 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:latest
+    container_name: postgres_container
+    environment:
+      POSTGRES_USER: ASDB_User
+      POSTGRES_PASSWORD: ASDB_UserPass
+      POSTGRES_DB: AltSkufDB
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "5430:5432"
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data/pgdata
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    command: >
+      postgres -c max_connections=1000
+               -c shared_buffers=256MB
+               -c effective_cache_size=768MB
+               -c maintenance_work_mem=64MB
+               -c checkpoint_completion_target=0.7
+               -c wal_buffers=16MB
+               -c default_statistics_target=100
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ASDB_User -d AltSkufDB" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    tty: true
+    stdin_open: true
+
+  redis:
+    image: redis:latest
+    container_name: redis
+    restart: always
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+    ports:
+      - "6379:6379"
+
+  rabbitmq:
+    image: rabbitmq:management
+    container_name: rabbitmq
+    restart: always
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 5s
+      timeout: 5s
+      retries: 3
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+     
+     
+# ------- vv СЕРВИСЫ vv ---------
+
+
+  api:
+    build:
+      context: ./src/AltSKUF.WebApi
+      dockerfile: Dockerfile
+    container_name: api
+    restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      ConnectionStrings__Messaging: "amqp://guest:guest@rabbitmq:5672"
+      ConnectionStrings__Redis: "redis:6379"
+      UserUrl: "http://user_service:8080"
+    ports:
+      - "5010:8080"
+
+  user_service:
+    build:
+      context: ./repos/AltSKUF.Back.Users
+      dockerfile: Dockerfile
+    container_name: user_service
+    restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      DefaultOptions__AuthenticationServiceAddress: "http://auth_service:8080"
+      ConnectionStrings__Messaging: "amqp://guest:guest@rabbitmq:5672"
+      ConnectionStrings__Redis: "redis:6379"
+      ConnectionStrings__userdb: "Host=postgres;Port=5432;Username=ASDB_User;Password=ASDB_UserPass;Database=AltSkufDB"
+      ASPNETCORE_FORWARDEDHEADERS_ENABLED: true
+      
+    ports:
+      - "5020:8080"
+
+  auth_service:
+    build:
+      context: ./repos/AltSKUF.Back.Authentication
+      dockerfile: Dockerfile
+    container_name: auth_service
+    restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      ConnectionStrings__Messaging: "amqp://guest:guest@rabbitmq:5672"
+      DefaultConfiguration__ServicesSercret: 244F7E30FB4B0510687EE70600063797947B3829645F7AA40F66C3A27EE1B81D6902B4F9415AA37FC17751547A99AB6BB05771A15B06C0C4D4DA209588639287 
+    ports:
+      - "5030:8080"
+    volumes:
+      - auth_data:/root/.aspnet/DataProtection-Keys
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+
+volumes:
+  pgdata:
+    driver: local
+  auth_data:
